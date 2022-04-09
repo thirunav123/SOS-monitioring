@@ -1,0 +1,6 @@
+ipaddress_of_system=10.73.11.252
+port_to_listen=2000
+filename_of_excel_sheet=IRS_Startup_sheet
+shiftA_start_time=06:00:00
+shiftB_start_time=14:30:00
+shiftC_start_time=22:30:00
