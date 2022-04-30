@@ -5,7 +5,7 @@ from PIL import Image
 from openpyxl import load_workbook
 import datetime
 from io import BytesIO
-from pyxlsb import open_workbook as open_xlsb
+# from pyxlsb import open_workbook as open_xlsb
 
 def to_excel(df):
     output = BytesIO()
@@ -38,9 +38,9 @@ button[title="View fullscreen"]{
 
 st.markdown(hide_img_fs, unsafe_allow_html=True)
 
-col1, col2 = st.columns((2,1))
+col1, col2 = st.columns((3,1))
 # col1,col2 = st.beta_columns([2,1])
-logo = Image.open('Logo_ZF_Rane.jpg')
+logo = Image.open('Logo_ZF_Rane.png')
 col1.header('IRS Startup Check Sheet')
 col2.image(logo, use_column_width=True)
 wb =load_workbook('IRS_Startup_sheet.xlsx')
@@ -65,35 +65,50 @@ if report_type=="Day report":
         day = from_date + datetime.timedelta(days=i)
         day_list.append(day.strftime("%d-%m-%Y"))
 
-column=ws.max_column
-row=ws.max_row
+column_count=ws.max_column
+row_count=ws.max_row
 date_column=1
 shift_column=1
-required_shift_row=1
+required_shift_row_list=[]
 a=st.button("Submit")
 dic={}
 if a:
     show_flag=False
     if report_type=="Shift report": 
-        for i in range(1,column+1):
+        header_flag_shift=False
+        for i in range(1,column_count+1):
             if ws.cell(row=head,column=i).value=="DATE":
                 date_column=i
             if ws.cell(row=head,column=i).value=="SHIFT":
                 shift_column=i
-        for i in range(1,row+1):
+        for i in range(1,row_count+1):
             if ws.cell(row=i,column=date_column).value==shift_date:
                 if ws.cell(row=i,column=shift_column).value==shift:
-                    required_shift_row=i 
+                    required_shift_row_list.append(i) 
+                    # required_shift_row=i
                     show_flag=True
                     # print("r")
         if show_flag:
             header_list=[]
             value_list=[]
-            for i in ws[head]:
-                if i.value != None:
-                    header_list.append(i.value)
-                    value_list.append(str(ws.cell(row=required_shift_row,column=i.column).value))
-            dic={line:header_list,'CHECK':value_list}
+            for r in required_shift_row_list:
+                value_list=[]
+                for i in ws[head]:
+                # print(i.value)
+                    if i.value != None:
+                        if header_flag_shift==False:
+                            header_list.append(i.value)
+                        value_list.append(ws.cell(row=r,column=i.column).value)
+                if header_flag_shift==False:
+                    dic[line]=header_list
+                    header_flag_shift=True
+                if len(required_shift_row_list)==1:
+                    dic[f'CHECK']=value_list
+                else:
+                    dic[f'CHECK {required_shift_row_list.index(r)+1}']=value_list
+                    
+            print(dic)
+            # dic={line:header_list,'CHECK':value_list}
             # st.table(,dic)
             st.table(dic)
             df=pd.DataFrame.from_dict(dic)
@@ -106,27 +121,27 @@ if a:
         else:
             st.info("No data found")
     if report_type=="Day report":
-        for i in range(1,column+1):
+        for i in range(1,column_count+1):
             if ws.cell(row=head,column=i).value=="DATE":
                 date_column=i
         count=0
         print(day_list)
         dic={}
         header_list=[]
-        header_flag=False
-        for i in range(head,row+1):
+        header_flag_day=False
+        for i in range(head,row_count+1):
             if ws.cell(row=i,column=date_column).value in day_list:
                 count=count+1
                 value_list=[]
                 for j in ws[head]:
-                    if header_flag==False:
+                    if header_flag_day==False:
                         header_list.append(j.value)
-                    value_list.append(str(ws.cell(row=i,column=j.column).value))
+                    value_list.append(ws.cell(row=i,column=j.column).value)
                     show_flag=True
-                if header_flag==False:
+                if header_flag_day==False:
                     dic[line]=header_list
-                    header_flag=True
-                dic['Check {}'.format(count)]=value_list
+                    header_flag_day=True
+                dic[f'CHECK {count}']=value_list
         # print('dic:',dic)
         if show_flag:
             st.table(dic)
@@ -157,4 +172,4 @@ st.markdown(hide_table_row_index, unsafe_allow_html=True)
 st.markdown(change_table, unsafe_allow_html=True)
 c1,c2=st.columns((3,1))
 url = "https://ranegroup.com/rtss"
-c2.markdown("Created by [RTSS OSD](%s)" % url)
+c2.markdown("Created by [ZRAI OSD](%s)" % url)

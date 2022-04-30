@@ -50,12 +50,18 @@ def excel_data_move():
                 wb.create_sheet(raw_data_list[0])
             ws=wb[raw_data_list[0]]
             now=datetime.datetime.now()
-            date=now.strftime("%d-%m-%Y")
+            current_time=datetime.time(now.hour,now.minute,now.second)
+            if current_time<datetime.time(A[0],A[1],A[2]):
+                dp=1
+            else:
+                dp=0
+            date=now-datetime.timedelta(days=dp)
+            date=date.strftime("%d-%m-%Y")
             time_now=now.strftime("%I.%M.%S_%p")
             # print(date,time_to_save)
             dic={}
             dic["DATE"]=date
-            dic["SHIFT"]=get_shift(datetime.time(now.hour,now.minute,now.second))
+            dic["SHIFT"]=get_shift(current_time)
             dic["TIME"]=time_now
             xl_headers=[]
             plc_header=[]
